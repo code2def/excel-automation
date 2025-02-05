@@ -52,7 +52,7 @@ if uploaded_file:
     
     # Convert to downloadable Excel
     @st.cache
-def convert_df(df):
+    def convert_df(df):
         return df.to_csv(index=False).encode('utf-8')
     
     csv = convert_df(result_df)
