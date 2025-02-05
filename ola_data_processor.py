@@ -27,8 +27,9 @@ def process_excel(file):
     if "Failure Reasons" not in filtered_df.columns:
         filtered_df["Failure Reasons"] = ""
     
-    filtered_df.loc[filtered_df["DELAY_DIARY"].notna(), "Failure category"] = "Genuine Fault / Prioritization Error"
-    filtered_df.loc[filtered_df["DELAY_DIARY"].notna(), "Failure Reasons"] = filtered_df["USER_ID_COMPLETION"].map(
+    # Update logic for Failure category and Failure Reasons
+    filtered_df.loc[filtered_df["DELAY_DIARY"].isna(), "Failure category"] = "Genuine Fault / Prioritization Error"
+    filtered_df.loc[filtered_df["DELAY_DIARY"].isna(), "Failure Reasons"] = filtered_df["USER_ID_COMPLETION"].map(
         lambda x: f"Missed to close on time by {valid_users.get(x, x)}"
     )
     
@@ -62,14 +63,14 @@ def format_excel(df):
             cell.border = border
             cell.alignment = alignment
 
-    # Format date columns
+    # Format date columns as m/d/yyyy
     date_columns = ["TASK_CREATE", "TASK_CLOSED", "REPORTING_MONTH"]
     for col in date_columns:
         if col in df.columns:
             col_idx = df.columns.get_loc(col) + 1  # +1 because Excel columns start at 1
             for cell in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=col_idx, max_col=col_idx):
                 for c in cell:
-                    c.number_format = 'Short Date'
+                    c.number_format = 'm/d/yyyy'
 
     return wb
 
@@ -84,11 +85,6 @@ if uploaded_file:
     st.write("### Filtered Data Preview:")
     st.dataframe(result_df)
     
-    # Copy filtered data to clipboard (using Streamlit's text_area)
-    csv_data = result_df.to_csv(index=False)
-    st.text_area("Copy Filtered Data to Clipboard", value=csv_data, height=300)
-    st.success("Use Ctrl+C (or Cmd+C) to copy the filtered data to your clipboard.")
-
     # Format and download the Excel file
     wb = format_excel(result_df)
     output_filename = "formatted_filtered_data.xlsx"
