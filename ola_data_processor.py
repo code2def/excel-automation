@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import pyperclip
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side, Alignment
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -85,9 +84,10 @@ if uploaded_file:
     st.write("### Filtered Data Preview:")
     st.dataframe(result_df)
     
-    # Copy filtered data to clipboard
-    pyperclip.copy(result_df.to_csv(index=False))
-    st.success("Filtered data copied to clipboard!")
+    # Copy filtered data to clipboard (using Streamlit's text_area)
+    csv_data = result_df.to_csv(index=False)
+    st.text_area("Copy Filtered Data to Clipboard", value=csv_data, height=300)
+    st.success("Use Ctrl+C (or Cmd+C) to copy the filtered data to your clipboard.")
 
     # Format and download the Excel file
     wb = format_excel(result_df)
