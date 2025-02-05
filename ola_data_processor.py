@@ -76,24 +76,37 @@ def format_excel(df):
 
 # Streamlit UI
 st.title("OLA Data Processor")
-uploaded_file = st.file_uploader("Upload Excel File", type=["xlsb"])
+uploaded_files = st.file_uploader("Upload Excel Files", type=["xlsb"], accept_multiple_files=True)
 
-if uploaded_file:
-    st.write("Processing file...")
-    result_df = process_excel(uploaded_file)
+if uploaded_files:
+    st.write("Processing files...")
     
-    st.write("### Filtered Data Preview:")
-    st.dataframe(result_df)
+    # Initialize an empty list to store filtered DataFrames
+    filtered_dfs = []
     
-    # Format and download the Excel file
-    wb = format_excel(result_df)
-    output_filename = "formatted_filtered_data.xlsx"
-    wb.save(output_filename)
+    # Process each uploaded file
+    for uploaded_file in uploaded_files:
+        filtered_df = process_excel(uploaded_file)
+        filtered_dfs.append(filtered_df)
+    
+    # Combine all filtered DataFrames into one
+    if filtered_dfs:
+        consolidated_df = pd.concat(filtered_dfs, ignore_index=True)
+        
+        st.write("### Consolidated Filtered Data Preview:")
+        st.dataframe(consolidated_df)
+        
+        # Format and download the Excel file
+        wb = format_excel(consolidated_df)
+        output_filename = "consolidated_filtered_data.xlsx"
+        wb.save(output_filename)
 
-    with open(output_filename, "rb") as file:
-        st.download_button(
-            label="Download Formatted Excel File",
-            data=file,
-            file_name=output_filename,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        with open(output_filename, "rb") as file:
+            st.download_button(
+                label="Download Consolidated Excel File",
+                data=file,
+                file_name=output_filename,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+    else:
+        st.warning("No valid data found in the uploaded files.")
