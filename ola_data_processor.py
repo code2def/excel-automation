@@ -1,5 +1,9 @@
 import streamlit as st
 import pandas as pd
+import pyperclip
+from openpyxl import Workbook
+from openpyxl.styles import Font, Border, Side, Alignment
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 # Define user mapping
 valid_users = {
@@ -39,6 +43,37 @@ def process_excel(file):
     
     return filtered_df
 
+def format_excel(df):
+    # Create a new workbook and select the active worksheet
+    wb = Workbook()
+    ws = wb.active
+
+    # Write the DataFrame to the worksheet
+    for r in dataframe_to_rows(df, index=False, header=True):
+        ws.append(r)
+
+    # Apply formatting
+    font = Font(name='Arial', size=9)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    alignment = Alignment(horizontal='left', vertical='center')
+
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+        for cell in row:
+            cell.font = font
+            cell.border = border
+            cell.alignment = alignment
+
+    # Format date columns
+    date_columns = ["TASK_CREATE", "TASK_CLOSED", "REPORTING_MONTH"]
+    for col in date_columns:
+        if col in df.columns:
+            col_idx = df.columns.get_loc(col) + 1  # +1 because Excel columns start at 1
+            for cell in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=col_idx, max_col=col_idx):
+                for c in cell:
+                    c.number_format = 'Short Date'
+
+    return wb
+
 # Streamlit UI
 st.title("OLA Data Processor")
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsb"])
@@ -50,10 +85,19 @@ if uploaded_file:
     st.write("### Filtered Data Preview:")
     st.dataframe(result_df)
     
-    # Convert to downloadable Excel
-    @st.cache
-    def convert_df(df):
-        return df.to_csv(index=False).encode('utf-8')
-    
-    csv = convert_df(result_df)
-    st.download_button("Download Processed File", csv, "filtered_data.csv", "text/csv")
+    # Copy filtered data to clipboard
+    pyperclip.copy(result_df.to_csv(index=False))
+    st.success("Filtered data copied to clipboard!")
+
+    # Format and download the Excel file
+    wb = format_excel(result_df)
+    output_filename = "formatted_filtered_data.xlsx"
+    wb.save(output_filename)
+
+    with open(output_filename, "rb") as file:
+        st.download_button(
+            label="Download Formatted Excel File",
+            data=file,
+            file_name=output_filename,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
