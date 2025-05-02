@@ -13,11 +13,7 @@ valid_users = {
 
 def process_excel(file):
     df = pd.read_excel(file, engine='pyxlsb')
-st.write("Available columns:", df.columns.tolist())
-
-    
- def process_excel(file):
-    df = pd.read_excel(file, engine='pyxlsb')
+    st.write("Available columns:", df.columns.tolist())
 
     # Apply filters
     filtered_df = df[
@@ -95,22 +91,22 @@ uploaded_files = st.file_uploader("Upload Excel Files", type=["xlsb"], accept_mu
 
 if uploaded_files:
     st.write("Processing files...")
-    
+
     # Initialize an empty list to store filtered DataFrames
     filtered_dfs = []
-    
+
     # Process each uploaded file
     for uploaded_file in uploaded_files:
         filtered_df = process_excel(uploaded_file)
         filtered_dfs.append(filtered_df)
-    
+
     # Combine all filtered DataFrames into one
     if filtered_dfs:
         consolidated_df = pd.concat(filtered_dfs, ignore_index=True)
-        
+
         st.write("### Consolidated Filtered Data Preview:")
         st.dataframe(consolidated_df)
-        
+
         # Format and download the Excel file
         wb = format_excel(consolidated_df)
         output_filename = "consolidated_filtered_data.xlsx"
