@@ -13,7 +13,6 @@ valid_users = {
 
 def process_excel(file):
     df = pd.read_excel(file, engine='pyxlsb')
-    st.write("Available columns:", df.columns.tolist())
 
     # Apply filters
     filtered_df = df[
