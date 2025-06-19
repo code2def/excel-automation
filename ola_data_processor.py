@@ -89,6 +89,7 @@ def process_excel(file):
     # Apply filters
     filtered_df = df[
         (df["QUEUE_CODE"] == "BDWCNFG") &
+        (df["D_IN_OUT_OLA"] == "OUT OF OLA") &
         (df["USER_ID_COMPLETION"].isin(valid_users.keys()))
     ].copy()
     
